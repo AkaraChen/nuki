@@ -1,28 +1,41 @@
-import { useLayoutEffect } from 'react';
-import { AdvancedDialog } from './components/AdvancedDialog';
+import { useEffect, useLayoutEffect } from 'react';
+import { Navigate, Route, Routes, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router';
 import { BootDialog } from './components/BootDialog';
 import { DropOverlay } from './components/DropOverlay';
-import { Toolstrip } from './components/Toolstrip';
-import { Topbar } from './components/Topbar';
-import { Workspace } from './components/Workspace';
+import { HOME_PATH, bindNavigate } from './cutout/nav';
+import { HomePage } from './pages/HomePage';
+import { CutoutPage } from './pages/CutoutPage';
 import { getRuntime, useCutoutStore } from './store/cutout-store';
 
 let sessionStarted = false;
 
 export function App() {
-  const mode = useCutoutStore((s) => s.mode);
   const bootOpen = useCutoutStore((s) => s.bootOpen);
+  const onCutout = useMatch('/cutout');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const navType = useNavigationType();
 
   useLayoutEffect(() => {
-    document.body.classList.toggle('mode-upload', mode === 'upload');
-    document.body.classList.toggle('mode-editor', mode === 'editor');
-  }, [mode]);
+    document.body.classList.toggle('mode-upload', !onCutout);
+    document.body.classList.toggle('mode-editor', !!onCutout);
+  }, [onCutout]);
+
+  useLayoutEffect(() => {
+    return bindNavigate((to, opts) => navigate(to, opts));
+  }, [navigate]);
 
   useLayoutEffect(() => {
     if (sessionStarted) return;
     sessionStarted = true;
     getRuntime().start();
   }, []);
+
+  useEffect(() => {
+    if (location.pathname === HOME_PATH && navType === 'POP' && useCutoutStore.getState().mode === 'editor') {
+      getRuntime().resetToUpload();
+    }
+  }, [location.pathname, location.key, navType]);
 
   useLayoutEffect(() => {
     const runtime = getRuntime();
@@ -54,10 +67,11 @@ export function App() {
   return (
     <>
       <div className="app" inert={bootOpen ? true : undefined}>
-        <Topbar />
-        <Toolstrip />
-        <AdvancedDialog />
-        <Workspace />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/cutout" element={<CutoutPage />} />
+          <Route path="*" element={<Navigate to={HOME_PATH} replace />} />
+        </Routes>
       </div>
       <DropOverlay />
       <BootDialog />

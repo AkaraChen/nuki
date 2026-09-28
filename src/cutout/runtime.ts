@@ -1,4 +1,6 @@
-import { DTYPES, MODELS, modelById, smallestModel, type Dtype, type ModelSpec } from '../models';
+import { DTYPES, MODELS, modelById, type Dtype, type ModelSpec } from '../models';
+import { readSettings, settingsNote } from './settings';
+import { CUTOUT_PATH, HOME_PATH, go } from './nav';
 import {
   BrushEngine,
   clampRadius,
@@ -22,7 +24,7 @@ const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
 type PendingStroke = { points: Pt[]; radius: number; kind: StrokeKind };
 
 export function defaultUi(): CutoutUi {
-  const spec = smallestModel();
+  const settings = readSettings();
   const params = new URLSearchParams(location.search);
   return {
     mode: 'upload',
@@ -54,10 +56,8 @@ export function defaultUi(): CutoutUi {
     badgeModelClass: 'badge',
     timings: '—',
     stageHint: '拖动分隔条对比原图',
-    modelId: spec.id,
-    dtype: '__auto',
-    device: hasWebGPU ? 'auto' : 'wasm',
-    modelNote: `${spec.note} 授权：${spec.license}`,
+    ...settings,
+    modelNote: settingsNote(settings.modelId),
     dropOverlayHidden: true,
     dropzoneDragover: false,
     dropzoneBrushOn: false,
@@ -138,7 +138,7 @@ export class CutoutRuntime {
   liveStroke: PendingStroke | null = null;
   runSeq = 0;
   loadedKey = '';
-  lastSpec: ModelSpec = smallestModel();
+  lastSpec: ModelSpec = modelById(readSettings().modelId);
   private bootTask: Promise<void> | null = null;
   private queuedFile: File | Blob | null = null;
   private busyDepth = 0;
@@ -199,18 +199,24 @@ export class CutoutRuntime {
   }
 
   start() {
+    this.adoptSettings();
     this.setTool('compare');
     this.syncSamUi();
     this.applySplit(this.ui.splitAt);
-    if (this.ui.bootOpen) void this.bootSmallestModel();
+    if (this.ui.bootOpen) void this.bootSelectedModel();
     else void this.initDeviceBadge();
   }
 
   retryBoot() {
-    void this.bootSmallestModel();
+    void this.bootSelectedModel();
   }
 
-  private bootSmallestModel() {
+  private adoptSettings() {
+    this.lastSpec = modelById(this.ui.modelId);
+    this.set({ modelNote: settingsNote(this.lastSpec.id) });
+  }
+
+  private bootSelectedModel() {
     if (this.bootTask) return this.bootTask;
     const task = this.runBoot().finally(() => {
       this.bootTask = null;
@@ -220,14 +226,11 @@ export class CutoutRuntime {
   }
 
   private async runBoot() {
-    const spec = smallestModel();
-    this.lastSpec = spec;
+    this.adoptSettings();
     this.loadedKey = '';
     this.set({
       bootOpen: true,
       bootError: '',
-      modelId: spec.id,
-      modelNote: `${spec.note} 授权：${spec.license}`,
       progressHidden: false,
       progressPct: 0,
       progressLabel: '正在下载…',
@@ -459,6 +462,13 @@ export class CutoutRuntime {
     canvas.width = w;
     canvas.height = h;
     canvas.getContext('2d', { willReadFrequently: false })!.putImageData(out, 0, 0);
+  }
+
+  presentEditor() {
+    if (!this.source) return;
+    this.fitFrame();
+    this.applySplit(this.ui.splitAt);
+    this.render();
   }
 
   fitFrame() {
@@ -708,6 +718,12 @@ export class CutoutRuntime {
     this.resetView();
     this.syncBrushUi();
     this.syncSamUi();
+    host.advDialog?.close();
+  }
+
+  leaveToHome() {
+    this.resetToUpload();
+    go(HOME_PATH, { replace: true });
   }
 
   async acceptFile(file: File | Blob) {
@@ -746,11 +762,10 @@ export class CutoutRuntime {
     });
     this.setMode('editor');
     this.setTab('cutout');
-    this.fitFrame();
     this.applySplit(0.5);
     this.syncBrushUi();
     this.syncSamUi();
-    this.render();
+    go(CUTOUT_PATH);
     void this.ensureSam();
     void this.infer(file);
   }
@@ -804,10 +819,15 @@ export class CutoutRuntime {
   }
 
   setModelId(id: string) {
-    this.set({ modelId: id, badgeModel: '未载入模型', badgeModelClass: 'badge' });
+    const spec = modelById(id);
     this.loadedKey = '';
-    this.lastSpec = modelById(id);
-    this.set({ modelNote: `${this.lastSpec.note} 授权：${this.lastSpec.license}` });
+    this.lastSpec = spec;
+    this.set({
+      modelId: spec.id,
+      modelNote: settingsNote(spec.id),
+      badgeModel: '未载入模型',
+      badgeModelClass: 'badge',
+    });
   }
 
   setDtype(dtype: string) {

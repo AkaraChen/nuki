@@ -17,7 +17,7 @@ export function BootDialog() {
       <div className="boot-card">
         {error ? null : <div className="boot-spinner" aria-hidden="true" />}
         <h2 id="boot-title">{error ? '模型没有准备好' : '正在准备模型'}</h2>
-        <p>{error ? error : '先下载最小的模型，准备好再开始。'}</p>
+        <p>{error ? error : '先把所选模型准备好，再开始。'}</p>
         {model ? <p className="boot-model">{model.label}</p> : null}
         {error ? (
           <button type="button" className="primary" data-testid="boot-retry" onClick={() => getRuntime().retryBoot()}>

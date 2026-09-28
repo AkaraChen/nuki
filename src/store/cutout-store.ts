@@ -1,21 +1,44 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { CutoutRuntime, defaultUi } from '../cutout/runtime';
+import { sanitizeSettings, SETTINGS_STORAGE_KEY, settingsNote, type CutoutSettings } from '../cutout/settings';
 import type { CutoutUi } from '../cutout/types';
 
 export type CutoutStore = CutoutUi & {
   runtime: CutoutRuntime;
 };
 
-export const useCutoutStore = create<CutoutStore>((set, get) => {
-  const runtime = new CutoutRuntime({
-    get: () => get(),
-    set: (partial) => set(partial),
-  });
-  return {
-    ...defaultUi(),
-    runtime,
-  };
-});
+export const useCutoutStore = create<CutoutStore>()(
+  persist(
+    (set, get) => {
+      const runtime = new CutoutRuntime({
+        get: () => get(),
+        set: (partial) => set(partial),
+      });
+      return {
+        ...defaultUi(),
+        runtime,
+      };
+    },
+    {
+      name: SETTINGS_STORAGE_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state): CutoutSettings => ({
+        modelId: state.modelId,
+        dtype: state.dtype,
+        device: state.device,
+      }),
+      merge: (persisted, current) => {
+        const settings = sanitizeSettings(persisted);
+        return {
+          ...current,
+          ...settings,
+          modelNote: settingsNote(settings.modelId),
+        };
+      },
+    },
+  ),
+);
 
 export function getRuntime() {
   return useCutoutStore.getState().runtime;
