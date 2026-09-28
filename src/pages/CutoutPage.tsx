@@ -73,7 +73,7 @@ export function CutoutPage() {
               <path d="M10 14h9.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </span>
-          <span className="wordmark">抠图台</span>
+          <span className="wordmark">nuki</span>
         </button>
         <nav className="editor-tabs" id="editor-tabs" role="tablist" aria-label="编辑工具">
           <button

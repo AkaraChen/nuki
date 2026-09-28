@@ -1,6 +1,19 @@
-# 抠图台 · web-image-background-remover
+<p align="center">
+  <img src="docs/brand/mark.svg" width="96" alt="nuki">
+</p>
 
-浏览器本地去背景：图片不离开机器，模型跑在 WebGPU（不可用时回落 WASM/CPU）。
+# nuki
+
+把主体从照片里抽出来。在浏览器里跑，图片不离开这台机器。
+
+[removebg.akr.moe](https://removebg.akr.moe)
+
+同一张照片，RMBG-1.4、fp16、WebGPU：
+
+<p align="center">
+  <img src="docs/demo/sample-input.jpg" width="420" alt="原图：两只猫躺在粉色毯子上">
+  <img src="docs/demo/cutout-rmbg14-fp16-webgpu.jpg" width="420" alt="抠完：两只猫和遥控器，背景换成蓝色">
+</p>
 
 ## 跑起来
 
@@ -29,9 +42,9 @@ npm run build    # 静态产物在 dist/
 
 | 模型 | 精度 | 体积 | 推理 | 说明 |
 | --- | --- | --- | --- | --- |
-| `kittypdf/RMBG-1.4-transformersjs` | fp16 | 84 MB | **0.6 s** | 默认。通用题材最稳 |
+| `kittypdf/RMBG-1.4-transformersjs` | fp16 | 84 MB | **0.6 s** | 通用题材最稳 |
 | `onnx-community/ISNet-ONNX` | fp16 | 84 MB | 0.65 s | @imgly/background-removal 那个家族 |
-| `Xenova/modnet` | fp16 | 12 MB | 1.7 s | 人像专用，别的题材会糊 |
+| `Xenova/modnet` | fp16 | 12 MB | 1.7 s | 最小。第一次打开会先下这个。只认人像 |
 | `jiabins0303/birefnet-lite-1024-webgpu` | fp16 | 109 MB | 5.3 s | 细节最好，代价是慢 |
 
 体积来自 HF API 的 `siblings[].size`，推理时间是 `performance.now()` 量的，都不是估的。
@@ -66,14 +79,13 @@ npm run build    # 静态产物在 dist/
 ## 目录
 
 ```
-index.html      页面骨架
+src/pages/      首页和抠图页
 src/models.ts   模型注册表（体积 / 授权 / 各后端推荐精度）
 src/worker.ts   推理 worker：拉权重、跑 pipeline、抽出 alpha
-src/main.tsx    React 入口
-src/store/      Zustand UI 状态
+src/store/      Zustand UI 状态，设置会记在浏览器里
 src/cutout/     合成 / Worker / SAM 笔刷会话
-src/style.css   自适应深浅色的样式
-docs/demo/      实测样张（sample-input.jpg → cutout-rmbg14-fp16-webgpu.jpg）
+docs/brand/     标志
+docs/demo/      实测样张
 ```
 
 ## 授权提醒

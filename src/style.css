@@ -74,7 +74,7 @@ button.brand:hover:not(:disabled) { background: transparent; color: var(--primar
   font-size: 18px;
   letter-spacing: -0.02em;
 }
-.logo { display: flex; }
+.mark { display: block; width: 28px; height: 28px; }
 
 .editor-tabs {
   display: flex;
