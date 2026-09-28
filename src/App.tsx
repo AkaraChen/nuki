@@ -1,5 +1,6 @@
 import { useLayoutEffect } from 'react';
 import { AdvancedDialog } from './components/AdvancedDialog';
+import { BootDialog } from './components/BootDialog';
 import { DropOverlay } from './components/DropOverlay';
 import { Toolstrip } from './components/Toolstrip';
 import { Topbar } from './components/Topbar';
@@ -10,6 +11,7 @@ let sessionStarted = false;
 
 export function App() {
   const mode = useCutoutStore((s) => s.mode);
+  const bootOpen = useCutoutStore((s) => s.bootOpen);
 
   useLayoutEffect(() => {
     document.body.classList.toggle('mode-upload', mode === 'upload');
@@ -51,13 +53,14 @@ export function App() {
 
   return (
     <>
-      <div className="app">
+      <div className="app" inert={bootOpen ? true : undefined}>
         <Topbar />
         <Toolstrip />
         <AdvancedDialog />
         <Workspace />
       </div>
       <DropOverlay />
+      <BootDialog />
     </>
   );
 }

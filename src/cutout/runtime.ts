@@ -1,4 +1,4 @@
-import { DTYPES, MODELS, modelById, type Dtype, type ModelSpec } from '../models';
+import { DTYPES, MODELS, modelById, smallestModel, type Dtype, type ModelSpec } from '../models';
 import {
   BrushEngine,
   clampRadius,
@@ -22,7 +22,7 @@ const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
 type PendingStroke = { points: Pt[]; radius: number; kind: StrokeKind };
 
 export function defaultUi(): CutoutUi {
-  const spec = MODELS[0];
+  const spec = smallestModel();
   const params = new URLSearchParams(location.search);
   return {
     mode: 'upload',
@@ -44,7 +44,7 @@ export function defaultUi(): CutoutUi {
     checkerOn: false,
     handleHidden: false,
     busyHidden: true,
-    busyText: '推理中…',
+    busyText: '正在抠图…',
     progressHidden: true,
     progressPct: 0,
     progressLabel: '',
@@ -77,6 +77,8 @@ export function defaultUi(): CutoutUi {
     probeAlive: null,
     forceSamWasm: params.get('sam') === 'wasm',
     brushCursor: { hidden: true, width: 0, height: 0, left: 0, top: 0, erase: false, restore: false },
+    bootOpen: params.get('boot') !== 'skip',
+    bootError: '',
   };
 }
 
@@ -136,7 +138,10 @@ export class CutoutRuntime {
   liveStroke: PendingStroke | null = null;
   runSeq = 0;
   loadedKey = '';
-  lastSpec: ModelSpec = MODELS[0];
+  lastSpec: ModelSpec = smallestModel();
+  private bootTask: Promise<void> | null = null;
+  private queuedFile: File | Blob | null = null;
+  private busyDepth = 0;
   samImageToken = 0;
 
   spaceDown = false;
@@ -197,7 +202,52 @@ export class CutoutRuntime {
     this.setTool('compare');
     this.syncSamUi();
     this.applySplit(this.ui.splitAt);
-    void this.initDeviceBadge();
+    if (this.ui.bootOpen) void this.bootSmallestModel();
+    else void this.initDeviceBadge();
+  }
+
+  retryBoot() {
+    void this.bootSmallestModel();
+  }
+
+  private bootSmallestModel() {
+    if (this.bootTask) return this.bootTask;
+    const task = this.runBoot().finally(() => {
+      this.bootTask = null;
+    });
+    this.bootTask = task;
+    return task;
+  }
+
+  private async runBoot() {
+    const spec = smallestModel();
+    this.lastSpec = spec;
+    this.loadedKey = '';
+    this.set({
+      bootOpen: true,
+      bootError: '',
+      modelId: spec.id,
+      modelNote: `${spec.note} 授权：${spec.license}`,
+      progressHidden: false,
+      progressPct: 0,
+      progressLabel: '正在下载…',
+      badgeModel: '载入中…',
+      badgeModelClass: 'badge warn',
+    });
+    try {
+      await this.initDeviceBadge();
+      await this.loadModel();
+      this.set({ bootOpen: false, bootError: '' });
+      const queued = this.queuedFile;
+      this.queuedFile = null;
+      if (queued) await this.acceptFile(queued);
+    } catch (err: unknown) {
+      this.set({
+        bootOpen: true,
+        bootError: `下载失败：${shortError(err)}`,
+        progressHidden: true,
+      });
+    }
   }
 
   private failRmbg(err: Error) {
@@ -661,6 +711,10 @@ export class CutoutRuntime {
   }
 
   async acceptFile(file: File | Blob) {
+    if (this.ui.bootOpen) {
+      this.queuedFile = file;
+      return;
+    }
     if (!file.type.startsWith('image/')) return;
     const bitmap = await createImageBitmap(file);
     const c = new OffscreenCanvas(bitmap.width, bitmap.height);
@@ -701,12 +755,21 @@ export class CutoutRuntime {
     void this.infer(file);
   }
 
+  private showBusy(text: string) {
+    this.busyDepth += 1;
+    this.set({ busyHidden: false, busyText: text, timings: text });
+    return () => {
+      this.busyDepth = Math.max(0, this.busyDepth - 1);
+      if (this.busyDepth === 0) this.set({ busyHidden: true });
+    };
+  }
+
   async infer(blob: Blob) {
     const notes: string[] = [];
-    this.set({ timings: this.loadedKey ? '正在去除背景…' : '正在准备模型…' });
+    const hideBusy = this.showBusy(this.loadedKey ? '正在抠图…' : '正在准备模型…');
     try {
       await this.loadModel();
-      this.set({ timings: '推理中…' });
+      this.set({ busyText: '正在抠图…', timings: '正在抠图…' });
       let device = this.pickDevice();
       let res: Awaited<ReturnType<typeof this.runModel>>;
       try {
@@ -714,17 +777,15 @@ export class CutoutRuntime {
       } catch (err) {
         if (device !== 'webgpu') throw err;
         notes.push(`WebGPU 跑不动这个模型（${shortError(err)}）→ 已回退 WASM`);
-        this.set({ device: 'wasm' });
+        this.set({ device: 'wasm', busyText: '正在用 CPU 重跑…', timings: '正在用 CPU 重跑…' });
         await this.loadModel(true);
-        this.set({ timings: '回退 WASM 重跑…' });
         res = await this.runModel(blob);
       }
       const fg = coverage(res.alpha);
       if ((fg < 0.002 || fg > 0.998) && this.ui.dtype === '__auto' && this.pickDevice() === 'webgpu' && this.dtypeFor(this.lastSpec) !== 'fp32') {
         notes.push('遮罩全空/全满 → 已自动回退 fp32 重跑');
-        this.set({ dtype: 'fp32' });
+        this.set({ dtype: 'fp32', busyText: '正在换精度重跑…', timings: '正在换精度重跑…' });
         await this.loadModel(true);
-        this.set({ timings: '回退 fp32 重跑…' });
         res = await this.runModel(blob);
         this.set({ dtype: '__auto' });
       }
@@ -737,6 +798,8 @@ export class CutoutRuntime {
     } catch (err: unknown) {
       this.set({ timings: `自动抠图未完成（${shortError(err)}）。笔刷仍可用。` });
       console.error(err);
+    } finally {
+      hideBusy();
     }
   }
 
@@ -758,13 +821,13 @@ export class CutoutRuntime {
   }
 
   async loadClicked() {
-    this.set({ busyHidden: false, busyText: '载入模型…' });
+    const hideBusy = this.showBusy('载入模型…');
     try {
       await this.loadModel(true);
     } catch (err: unknown) {
       this.set({ timings: `载入失败：${(err as Error)?.message ?? err}` });
     } finally {
-      this.set({ busyHidden: true });
+      hideBusy();
     }
   }
 
@@ -798,6 +861,7 @@ export class CutoutRuntime {
   }
 
   openFilePicker() {
+    if (this.ui.bootOpen) return;
     host.fileInput?.click();
   }
 
@@ -1014,6 +1078,7 @@ export class CutoutRuntime {
 
   onWindowDragEnter(e: DragEvent) {
     e.preventDefault();
+    if (this.ui.bootOpen) return;
     this.dragDepth += 1;
     this.set({ dropOverlayHidden: false });
   }
@@ -1047,22 +1112,6 @@ export class CutoutRuntime {
 
   downloadResult() {
     host.canvas?.toBlob((b) => b && this.downloadBlob(b, `cutout-${Date.now()}.png`), 'image/png');
-  }
-
-  downloadMask() {
-    if (!this.source || this.effectiveAlpha.length !== this.source.width * this.source.height) return;
-    const c = document.createElement('canvas');
-    c.width = this.source.width;
-    c.height = this.source.height;
-    const ctx = c.getContext('2d')!;
-    const out = ctx.createImageData(this.source.width, this.source.height);
-    const v = this.effectiveAlpha;
-    for (let i = 0, p = 0; i < v.length; i++, p += 4) {
-      out.data[p] = out.data[p + 1] = out.data[p + 2] = v[i];
-      out.data[p + 3] = 255;
-    }
-    ctx.putImageData(out, 0, 0);
-    c.toBlob((b) => b && this.downloadBlob(b, `mask-${Date.now()}.png`), 'image/png');
   }
 
   async initDeviceBadge() {

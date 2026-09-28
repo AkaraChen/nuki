@@ -15,7 +15,7 @@ test.beforeAll(() => {
 
 test('promised keyboard shortcuts actually work', async ({ page }) => {
   await abortHub(page);
-  await page.goto('/');
+  await page.goto('/?boot=skip');
   await page.getByTestId('file-input').setInputFiles(sample);
   await waitCanvas(page);
 
@@ -54,7 +54,7 @@ test('promised keyboard shortcuts actually work', async ({ page }) => {
 
 test('when SAM cannot serve, the brush is disabled with a reason and never blocks the page', async ({ page }) => {
   await abortHub(page);
-  await page.goto('/');
+  await page.goto('/?boot=skip');
   await page.getByTestId('file-input').setInputFiles(sample);
   await waitCanvas(page);
 
@@ -78,7 +78,7 @@ test('when SAM cannot serve, the brush is disabled with a reason and never block
 
 test('SAM load failure with ?sam=wasm keeps the brush gated and explains itself', async ({ page }) => {
   await abortHub(page);
-  await page.goto('/?sam=wasm');
+  await page.goto('/?sam=wasm&boot=skip');
   await page.getByTestId('file-input').setInputFiles(sample);
   await waitCanvas(page);
   // ?sam=wasm bypasses the WebGPU gate, so a real load runs and must fail.

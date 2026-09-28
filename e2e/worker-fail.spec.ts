@@ -19,7 +19,7 @@ test('SAM worker script 500 marks SAM unavailable and gates the brush', async ({
   );
   await abortHub(page);
 
-  await page.goto('/?sam=wasm');
+  await page.goto('/?sam=wasm&boot=skip');
   await page.getByTestId('file-input').setInputFiles(sample);
   await waitCanvas(page);
 

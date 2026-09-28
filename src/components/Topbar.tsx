@@ -70,15 +70,6 @@ export function Topbar() {
         </button>
         <div className="header-download editor-only">
           <button
-            id="btn-download-mask"
-            className="ghost"
-            disabled={downloadsDisabled}
-            data-testid="btn-download-mask"
-            onClick={() => getRuntime().downloadMask()}
-          >
-            下载遮罩
-          </button>
-          <button
             id="btn-download"
             className="primary pill"
             disabled={downloadsDisabled}

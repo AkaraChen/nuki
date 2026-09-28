@@ -173,9 +173,11 @@ export function Workspace() {
               </div>
             </div>
           </div>
-          <div className="busy" id="busy" hidden={busyHidden}>
-            <span className="spinner" />
-            <span id="busy-text">{busyText}</span>
+          <div className="busy" id="busy" hidden={busyHidden} role="status" aria-live="polite" data-testid="cutout-busy">
+            <div className="busy-card">
+              <span className="spinner" />
+              <span id="busy-text">{busyText}</span>
+            </div>
           </div>
           <div
             id="brush-cursor"

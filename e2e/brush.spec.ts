@@ -34,7 +34,7 @@ test.beforeAll(() => {
 test('P0 without a SAM model: brush is disabled with a reason, page still works', async ({ page }) => {
   await page.route(/huggingface\.co|hf\.co/, (route) => route.abort());
 
-  await page.goto('/');
+  await page.goto('/?boot=skip');
   await page.getByTestId('file-input').setInputFiles(sample);
   await waitCanvas(page);
 

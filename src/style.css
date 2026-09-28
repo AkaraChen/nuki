@@ -426,14 +426,35 @@ button.btn-upload:hover:not(:disabled) { background: var(--primary-hover); }
 .handle span::after { right: 8px; border-left: 5px solid var(--primary-fg); }
 
 .busy {
-  position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
-  gap: 10px; background: rgba(247, 249, 250, 0.72);
-  backdrop-filter: blur(2px); font-size: 14px; color: var(--muted);
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(247, 249, 250, 0.62);
+  backdrop-filter: blur(6px);
+}
+.busy-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 148px;
+  padding: 22px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
 }
 .spinner {
   width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid var(--line); border-top-color: var(--primary);
   animation: spin .7s linear infinite;
+}
+.busy-card .spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -488,6 +509,59 @@ button.btn-upload:hover:not(:disabled) { background: var(--primary-hover); }
   color: var(--ink);
 }
 .drop-overlay-card span { color: var(--muted); font-size: 14px; }
+
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(247, 249, 250, 0.88);
+  backdrop-filter: blur(8px);
+}
+.boot-card {
+  width: min(380px, 100%);
+  padding: 32px 28px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.boot-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--primary);
+  animation: spin 0.7s linear infinite;
+}
+.boot-card h2 {
+  margin: 16px 0 6px;
+  font-family: Poppins, "Open Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.boot-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.boot-model {
+  margin-top: 8px !important;
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+.boot-card .progress {
+  margin-top: 18px;
+  text-align: left;
+}
+.boot-card button { margin-top: 18px; }
 
 .mode-upload .editor-only { display: none !important; }
 .mode-editor .upload-only { display: none !important; }

@@ -23,7 +23,7 @@ export const MODELS: ModelSpec[] = [
   {
     id: 'kittypdf/RMBG-1.4-transformersjs',
     label: 'RMBG-1.4',
-    note: '默认。通用题材最稳，本机 WebGPU 实测 0.6s。官方 briaai 那份在 transformers.js v4 里跑不了，这是社区修过 config 的分支。非商用授权。',
+    note: '通用题材最稳，本机 WebGPU 实测 0.6s。官方 briaai 那份在 transformers.js v4 里跑不了，这是社区修过 config 的分支。非商用授权。',
     kind: 'general',
     license: 'bria-rmbg-1.4（非商用）',
     sizeMB: 84,
@@ -41,7 +41,7 @@ export const MODELS: ModelSpec[] = [
   {
     id: 'Xenova/modnet',
     label: 'MODNet',
-    note: '只有 12MB，秒开。但只认人像，别的题材会糊掉。',
+    note: '最小的一份，打开页面时会先下载。只有 12MB，但只认人像，别的题材会糊掉。',
     kind: 'portrait',
     license: 'Apache-2.0',
     sizeMB: 12,
@@ -60,6 +60,10 @@ export const MODELS: ModelSpec[] = [
 
 export function modelById(id: string): ModelSpec {
   return MODELS.find((m) => m.id === id) ?? MODELS[0];
+}
+
+export function smallestModel(): ModelSpec {
+  return MODELS.reduce((best, spec) => (spec.sizeMB < best.sizeMB ? spec : best));
 }
 
 export const DTYPES: Dtype[] = ['fp32', 'fp16', 'q8', 'int8', 'uint8', 'q4', 'q4f16', 'bnb4'];

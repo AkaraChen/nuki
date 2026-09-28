@@ -76,4 +76,6 @@ export type CutoutUi = {
   probeAlive: { type: string; t?: number } | null;
   forceSamWasm: boolean;
   brushCursor: BrushCursor;
+  bootOpen: boolean;
+  bootError: string;
 };
