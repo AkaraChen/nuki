@@ -6,7 +6,7 @@
 
 把主体从照片里抽出来。在浏览器里跑，图片不离开这台机器。
 
-[removebg.akr.moe](https://removebg.akr.moe)
+[nuki.akr.moe](https://nuki.akr.moe)
 
 同一张照片，RMBG-1.4、fp16、WebGPU：
 
