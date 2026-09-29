@@ -32,6 +32,18 @@ function keyOf(model: string, dtype: Dtype, device: Device) {
   return `${model}|${dtype}|${device}`;
 }
 
+/** True when this model's ONNX weights are already in the transformers.js browser cache. */
+export async function weightsAreCached(model: string): Promise<boolean> {
+  if (typeof caches === 'undefined') return false;
+  try {
+    const cache = await caches.open('transformers-cache');
+    const keys = await cache.keys();
+    return keys.some((req) => req.url.includes(model) && req.url.includes('.onnx'));
+  } catch {
+    return false;
+  }
+}
+
 async function load({ model, dtype, device }: LoadMsg, post: Post) {
   const key = keyOf(model, dtype, device);
   if (segmenter && loadedKey === key) {
@@ -43,6 +55,7 @@ async function load({ model, dtype, device }: LoadMsg, post: Post) {
 
   try {
     const started = performance.now();
+    post({ type: 'model-cache', cached: await weightsAreCached(model) });
     const pipe = (await pipeline('background-removal', model, {
       device,
       dtype: dtype as never,

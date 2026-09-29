@@ -77,7 +77,7 @@ export function defaultUi(): CutoutUi {
     probeAlive: null,
     forceSamWasm: params.get('sam') === 'wasm',
     brushCursor: { hidden: true, width: 0, height: 0, left: 0, top: 0, erase: false, restore: false },
-    bootOpen: params.get('boot') !== 'skip',
+    bootOpen: false,
     bootError: '',
   };
 }
@@ -140,6 +140,12 @@ export class CutoutRuntime {
   loadedKey = '';
   lastSpec: ModelSpec = modelById(readSettings().modelId);
   private bootTask: Promise<void> | null = null;
+  /** Homepage boot is in flight; progress may open the download dialog. */
+  private watchingDownload = false;
+  /** `true` once the worker reports the weights are already on disk. `null` until that report. */
+  private bootFromCache: boolean | null = null;
+  private loadInflight: Promise<void> | null = null;
+  private loadInflightKey = '';
   private queuedFile: File | Blob | null = null;
   private busyDepth = 0;
   samImageToken = 0;
@@ -203,8 +209,8 @@ export class CutoutRuntime {
     this.setTool('compare');
     this.syncSamUi();
     this.applySplit(this.ui.splitAt);
-    if (this.ui.bootOpen) void this.bootSelectedModel();
-    else void this.initDeviceBadge();
+    if (new URLSearchParams(location.search).get('boot') === 'skip') void this.initDeviceBadge();
+    else void this.bootSelectedModel();
   }
 
   retryBoot() {
@@ -228,23 +234,24 @@ export class CutoutRuntime {
   private async runBoot() {
     this.adoptSettings();
     this.loadedKey = '';
+    this.watchingDownload = true;
+    this.bootFromCache = null;
     this.set({
-      bootOpen: true,
+      bootOpen: false,
       bootError: '',
-      progressHidden: false,
-      progressPct: 0,
-      progressLabel: '正在下载…',
       badgeModel: '载入中…',
       badgeModelClass: 'badge warn',
     });
     try {
       await this.initDeviceBadge();
       await this.loadModel();
+      this.watchingDownload = false;
       this.set({ bootOpen: false, bootError: '' });
       const queued = this.queuedFile;
       this.queuedFile = null;
       if (queued) await this.acceptFile(queued);
     } catch (err: unknown) {
+      this.watchingDownload = false;
       this.set({
         bootOpen: true,
         bootError: `下载失败：${shortError(err)}`,
@@ -270,6 +277,10 @@ export class CutoutRuntime {
           rmbgBootAt: typeof msg.t === 'number' ? msg.t : performance.now(),
         });
         break;
+      case 'model-cache':
+        this.bootFromCache = msg.cached === true;
+        if (this.watchingDownload && this.bootFromCache === false) this.set({ bootOpen: true });
+        break;
       case 'progress': {
         const { status, file, loaded, total } = msg as {
           status: string;
@@ -278,6 +289,9 @@ export class CutoutRuntime {
           total: number;
         };
         this.set({ progressHidden: false });
+        if (this.watchingDownload && this.bootFromCache !== true && (status === 'download' || status === 'progress')) {
+          this.set({ bootOpen: true });
+        }
         if (status === 'progress' && total) {
           this.paintProgress(
             status,
@@ -368,6 +382,7 @@ export class CutoutRuntime {
     const device = this.pickDevice();
     const key = `${spec.id}|${dtype}|${device}`;
     if (!force && this.loadedKey === key) return Promise.resolve();
+    if (!force && this.loadInflight && this.loadInflightKey === key) return this.loadInflight;
     this.set({
       progressHidden: false,
       progressPct: 0,
@@ -375,10 +390,16 @@ export class CutoutRuntime {
       badgeModel: '载入中…',
       badgeModelClass: 'badge warn',
     });
-    return new Promise<void>((resolve, reject) => {
+    const promise = new Promise<void>((resolve, reject) => {
       this.pendingLoad = { resolve, reject };
       this.worker!.postMessage({ type: 'load', model: spec.id, dtype, device });
     });
+    this.loadInflightKey = key;
+    const tracked = promise.finally(() => {
+      if (this.loadInflight === tracked) this.loadInflight = null;
+    });
+    this.loadInflight = tracked;
+    return tracked;
   }
 
   private runModel(blob: Blob) {

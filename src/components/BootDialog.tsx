@@ -19,7 +19,7 @@ export function BootDialog() {
   if (!open) return null;
 
   const model = MODEL_OPTIONS.find((m) => m.id === modelId);
-  const title = error ? '模型没有准备好' : '正在准备模型';
+  const title = error ? '模型没有准备好' : '正在下载模型';
 
   return (
     <Dialog
@@ -35,9 +35,9 @@ export function BootDialog() {
         content={
           <LayoutContent>
             <Stack gap={3} align="center">
-              {error ? null : <Spinner size="xl" aria-label="正在准备模型" />}
+              {error ? null : <Spinner size="xl" aria-label="正在下载模型" />}
               <Heading id="boot-title" level={2}>{title}</Heading>
-              <Text color="secondary">{error ? error : '先把所选模型准备好，再开始。'}</Text>
+              <Text color="secondary">{error ? error : '下载完成后会留在这台设备上。'}</Text>
               {model ? <Text weight="semibold">{model.label}</Text> : null}
               {error ? (
                 <Button label="重试" variant="primary" data-testid="boot-retry" onClick={() => getRuntime().retryBoot()} />
