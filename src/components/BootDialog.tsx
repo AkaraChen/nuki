@@ -36,7 +36,15 @@ export function BootDialog() {
           <LayoutContent>
             <Stack gap={3} align="center">
               {error ? null : <Spinner size="xl" aria-label="正在下载模型" />}
-              <Heading id="boot-title" level={2}>{title}</Heading>
+              <Heading
+                id="boot-title"
+                level={2}
+                tabIndex={-1}
+                data-autofocus
+                className="outline-none"
+              >
+                {title}
+              </Heading>
               <Text color="secondary">{error ? error : '下载完成后会留在这台设备上。'}</Text>
               {model ? <Text weight="semibold">{model.label}</Text> : null}
               {error ? (
