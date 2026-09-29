@@ -25,10 +25,7 @@ export function HomePage() {
       </header>
       <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <section className="m-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 py-8 max-[860px]:px-4 max-[860px]:py-6">
-          <Stack gap={2} align="center">
-            <Heading level={1} type="display-3">去掉图片背景</Heading>
-            <Text color="secondary">在这台设备上自动完成，照片不会上传。</Text>
-          </Stack>
+          <Heading level={1} type="display-3">去掉图片背景</Heading>
           <div
             className={`relative flex w-full max-w-xl cursor-pointer items-center justify-center${dropzoneDragover ? ' rounded-lg outline outline-[3px] outline-offset-2 outline-accent-bg' : ''}`}
             id="dropzone"

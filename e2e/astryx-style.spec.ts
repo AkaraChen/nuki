@@ -76,9 +76,9 @@ test('shipped chrome uses Astryx tokens instead of the old palette', async ({ pa
   await page.route(/huggingface\.co|hf\.co/, (route) => route.abort());
   await page.getByTestId('file-input').setInputFiles(sample);
   await expect(page.getByTestId('btn-download')).toBeVisible();
-  await page.getByRole('tab', { name: '背景' }).click();
+  await page.getByRole('radio', { name: '背景' }).click();
   await expect(page.getByRole('radio', { name: '纯色' })).toBeVisible();
-  await page.getByRole('tab', { name: '抠图' }).click();
+  await page.getByRole('radio', { name: '抠图' }).click();
   await page.getByTestId('btn-advanced').click();
   await expect(page.getByRole('heading', { name: '高级设置' })).toBeVisible();
   await expect(page.getByRole('button', { name: '载入模型' })).toBeVisible();

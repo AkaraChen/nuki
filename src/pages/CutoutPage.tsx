@@ -1,10 +1,11 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { useEffect, useLayoutEffect } from 'react';
 import { Navigate } from 'react-router';
+import mark from '../../docs/brand/mark.svg';
 import { AdvancedDialog } from '../components/AdvancedDialog';
 import { Toolstrip } from '../components/Toolstrip';
 import { HOME_PATH } from '../cutout/nav';
@@ -34,7 +35,6 @@ export function CutoutPage() {
   const view = useCutoutStore((s) => s.view);
   const splitAt = useCutoutStore((s) => s.splitAt);
   const stageHint = useCutoutStore((s) => s.stageHint);
-  const timings = useCutoutStore((s) => s.timings);
   const dropzoneDragover = useCutoutStore((s) => s.dropzoneDragover);
   const dropzoneBrushOn = useCutoutStore((s) => s.dropzoneBrushOn);
   const dropzonePanning = useCutoutStore((s) => s.dropzonePanning);
@@ -85,55 +85,54 @@ export function CutoutPage() {
 
   return (
     <>
-      <header className="z-20 flex min-h-18 shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-6 max-[860px]:h-auto max-[860px]:flex-wrap max-[860px]:px-3 max-[860px]:py-2">
-        <Button
+      <header className="z-20 flex min-h-18 shrink-0 items-center gap-4 border-b border-border bg-surface px-6 max-[860px]:h-auto max-[860px]:flex-wrap max-[860px]:px-3 max-[860px]:py-2">
+        <button
           id="btn-back"
           data-testid="btn-back"
-          label="nuki"
-          variant="ghost"
+          type="button"
           aria-label="返回首页"
-          icon={
-            <svg viewBox="0 0 28 28" width="20" height="20" fill="none" aria-hidden="true">
-              <path d="M16.5 7.5 9 14l7.5 6.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M10 14h9.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-            </svg>
-          }
+          className="flex w-40 shrink-0 items-center gap-2 text-primary max-[860px]:w-auto"
           onClick={() => getRuntime().leaveToHome()}
-        />
-        <div className="flex min-w-0 items-center justify-center gap-2 max-[860px]:order-3 max-[860px]:w-full max-[860px]:justify-start max-[860px]:overflow-x-auto">
-          <TabList
+        >
+          <svg viewBox="0 0 16 16" className="size-4 shrink-0" fill="none" aria-hidden="true">
+            <path d="M10 3.5 5.5 8 10 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <img className="block size-7" src={mark} alt="" width={28} height={28} />
+          <Text type="large" weight="bold">nuki</Text>
+        </button>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-2 max-[860px]:order-3 max-[860px]:w-full max-[860px]:flex-none max-[860px]:justify-start max-[860px]:overflow-x-auto">
+          <SegmentedControl
             id="editor-tabs"
-            role="tablist"
-            aria-label="编辑工具"
+            label="编辑工具"
+            size="lg"
             value={tab}
             onChange={(value) => {
               if (value === 'cutout' || value === 'background' || value === 'adjust') getRuntime().setTab(value as EditorTab);
             }}
           >
-            <Tab value="cutout" label="抠图" data-tab="cutout" panelId="panel-cutout" />
-            <Tab value="background" label="背景" data-tab="background" panelId="panel-background" />
-            <Tab value="adjust" label="调整" data-tab="adjust" panelId="panel-adjust" />
-          </TabList>
+            <SegmentedControlItem value="cutout" label="抠图" data-tab="cutout" />
+            <SegmentedControlItem value="background" label="背景" data-tab="background" />
+            <SegmentedControlItem value="adjust" label="调整" data-tab="adjust" />
+          </SegmentedControl>
           <Button
             id="btn-advanced"
             data-testid="btn-advanced"
             label="高级"
-            variant="ghost"
+            variant="secondary"
+            size="lg"
             aria-haspopup="dialog"
             onClick={() => getRuntime().openAdvanced()}
           />
         </div>
-        <div className="flex min-w-32 items-center justify-end gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              id="btn-download"
-              data-testid="btn-download"
-              label="下载"
-              variant="primary"
-              isDisabled={downloadsDisabled}
-              onClick={() => getRuntime().downloadResult()}
-            />
-          </div>
+        <div className="flex w-40 shrink-0 items-center justify-end max-[860px]:w-auto">
+          <Button
+            id="btn-download"
+            data-testid="btn-download"
+            label="下载"
+            variant="primary"
+            isDisabled={downloadsDisabled}
+            onClick={() => getRuntime().downloadResult()}
+          />
         </div>
       </header>
       <Toolstrip />
@@ -257,8 +256,7 @@ export function CutoutPage() {
               />
               <Button id="btn-zoom-in" label="+" aria-label="放大" variant="ghost" size="sm" onClick={() => getRuntime().zoomIn()} />
             </div>
-            <Text id="stage-hint" color="secondary">{stageHint}</Text>
-            <Text id="timings" className="max-w-[46%] text-right whitespace-pre-line max-[860px]:max-w-full max-[860px]:text-left" type="supporting" color="secondary">{timings}</Text>
+            <Text id="stage-hint" className="min-w-0 flex-1 text-center" color="secondary">{stageHint}</Text>
           </div>
         </section>
       </main>

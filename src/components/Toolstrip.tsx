@@ -24,7 +24,7 @@ export function Toolstrip() {
 
   return (
     <div className="z-10 shrink-0 border-b border-border bg-surface px-6 py-2" id="toolstrip">
-      <section className={tab === 'cutout' ? 'flex flex-wrap items-center gap-5' : 'hidden'} id="panel-cutout" role="tabpanel" data-panel="cutout" hidden={tab !== 'cutout'}>
+      <section className={tab === 'cutout' ? 'flex flex-wrap items-center gap-5' : 'hidden'} id="panel-cutout" data-panel="cutout" hidden={tab !== 'cutout'}>
         <div className="flex flex-col gap-1">
           <Text type="supporting" color="secondary" weight="bold">Magic Brush</Text>
           <SegmentedControl
@@ -94,7 +94,7 @@ export function Toolstrip() {
         </div>
       </section>
 
-      <section className={tab === 'background' ? 'flex flex-wrap items-center gap-5' : 'hidden'} id="panel-background" role="tabpanel" data-panel="background" hidden={tab !== 'background'}>
+      <section className={tab === 'background' ? 'flex flex-wrap items-center gap-5' : 'hidden'} id="panel-background" data-panel="background" hidden={tab !== 'background'}>
         <div className="flex flex-col gap-1">
           <Text type="supporting" color="secondary" weight="bold">背景</Text>
           <SegmentedControl
@@ -125,7 +125,7 @@ export function Toolstrip() {
         </label>
       </section>
 
-      <section className={tab === 'adjust' ? 'flex flex-wrap items-center gap-5' : 'hidden'} id="panel-adjust" role="tabpanel" data-panel="adjust" hidden={tab !== 'adjust'}>
+      <section className={tab === 'adjust' ? 'flex flex-wrap items-center gap-5' : 'hidden'} id="panel-adjust" data-panel="adjust" hidden={tab !== 'adjust'}>
         <div className="flex flex-col gap-1">
           <Text type="supporting" color="secondary">
             阈值 <b id="val-threshold">{threshold.toFixed(2)}</b>
