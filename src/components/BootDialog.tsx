@@ -1,3 +1,11 @@
+import { Button } from '@astryxdesign/core/Button';
+import { Dialog } from '@astryxdesign/core/Dialog';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { MODEL_OPTIONS } from '../cutout/runtime';
 import { getRuntime, useCutoutStore } from '../store/cutout-store';
 
@@ -11,27 +19,35 @@ export function BootDialog() {
   if (!open) return null;
 
   const model = MODEL_OPTIONS.find((m) => m.id === modelId);
+  const title = error ? '模型没有准备好' : '正在准备模型';
 
   return (
-    <div className="boot-overlay" role="dialog" aria-modal="true" aria-labelledby="boot-title" aria-busy={!error} data-testid="boot-dialog">
-      <div className="boot-card">
-        {error ? null : <div className="boot-spinner" aria-hidden="true" />}
-        <h2 id="boot-title">{error ? '模型没有准备好' : '正在准备模型'}</h2>
-        <p>{error ? error : '先把所选模型准备好，再开始。'}</p>
-        {model ? <p className="boot-model">{model.label}</p> : null}
-        {error ? (
-          <button type="button" className="primary" data-testid="boot-retry" onClick={() => getRuntime().retryBoot()}>
-            重试
-          </button>
-        ) : (
-          <div className="progress" hidden={progressHidden}>
-            <div className="bar">
-              <i style={{ width: `${progressPct}%` }} />
-            </div>
-            <span className="progress-label">{progressLabel || '正在下载…'}</span>
-          </div>
-        )}
-      </div>
-    </div>
+    <Dialog
+      isOpen
+      purpose="required"
+      width={380}
+      data-testid="boot-dialog"
+      aria-labelledby="boot-title"
+      aria-busy={!error}
+      onOpenChange={() => {}}
+    >
+      <Layout
+        content={
+          <LayoutContent>
+            <Stack gap={3} align="center">
+              {error ? null : <Spinner size="xl" aria-label="正在准备模型" />}
+              <Heading id="boot-title" level={2}>{title}</Heading>
+              <Text color="secondary">{error ? error : '先把所选模型准备好，再开始。'}</Text>
+              {model ? <Text weight="semibold">{model.label}</Text> : null}
+              {error ? (
+                <Button label="重试" variant="primary" data-testid="boot-retry" onClick={() => getRuntime().retryBoot()} />
+              ) : (
+                <ProgressBar hidden={progressHidden} label={progressLabel || '正在下载…'} value={progressPct} />
+              )}
+            </Stack>
+          </LayoutContent>
+        }
+      />
+    </Dialog>
   );
 }

@@ -1,10 +1,22 @@
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Text } from '@astryxdesign/core/Text';
 import { useEffect, useLayoutEffect } from 'react';
 import { Navigate } from 'react-router';
 import { AdvancedDialog } from '../components/AdvancedDialog';
 import { Toolstrip } from '../components/Toolstrip';
 import { HOME_PATH } from '../cutout/nav';
 import { host } from '../cutout/host';
+import type { EditorTab } from '../cutout/types';
 import { getRuntime, useCutoutStore } from '../store/cutout-store';
+
+const checkerTiles =
+  'bg-[linear-gradient(45deg,var(--color-border)_25%,transparent_25%),linear-gradient(-45deg,var(--color-border)_25%,transparent_25%),linear-gradient(45deg,transparent_75%,var(--color-border)_75%),linear-gradient(-45deg,transparent_75%,var(--color-border)_75%)]';
+
+const handleKnob =
+  "absolute top-1/2 left-1/2 size-8 -translate-1/2 rounded-full bg-accent-bg shadow-sm before:absolute before:top-1/2 before:left-2 before:-mt-1 before:border-y-4 before:border-y-transparent before:border-r-[5px] before:border-r-on-accent before:content-[''] after:absolute after:top-1/2 after:right-2 after:-mt-1 after:border-y-4 after:border-y-transparent after:border-l-[5px] after:border-l-on-accent after:content-['']";
 
 export function CutoutPage() {
   const tab = useCutoutStore((s) => s.tab);
@@ -54,80 +66,80 @@ export function CutoutPage() {
   if (!imgSrc) return <Navigate to={HOME_PATH} replace />;
 
   const dropClass = [
-    'dropzone',
-    dropzoneDragover ? 'dragover' : '',
-    dropzoneBrushOn ? 'brush-on' : '',
-    dropzonePanning ? 'panning' : '',
-    dropzoneIsPanning ? 'is-panning' : '',
+    'relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted',
+    checkerTiles,
+    'bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0]',
+    dropzoneDragover ? 'outline outline-[3px] outline-offset-2 outline-accent-bg' : '',
+    dropzoneBrushOn && !dropzonePanning ? 'cursor-none' : '',
+    dropzonePanning && !dropzoneIsPanning ? 'cursor-grab! [&_*]:cursor-grab!' : '',
+    dropzoneIsPanning ? 'cursor-grabbing! [&_*]:cursor-grabbing!' : '',
   ]
     .filter(Boolean)
     .join(' ');
 
+  const brushRing = brushCursor.erase
+    ? 'border-error shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-error)_55%,black)]'
+    : brushCursor.restore
+      ? 'border-success shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-success)_55%,black)]'
+      : 'border-white shadow-[0_0_0_1px_rgba(0,0,0,0.55)]';
+
   return (
     <>
-      <header className="topbar">
-        <button type="button" className="brand" id="btn-back" data-testid="btn-back" aria-label="返回首页" onClick={() => getRuntime().leaveToHome()}>
-          <span className="logo" aria-hidden="true">
-            <svg viewBox="0 0 28 28" width="28" height="28" fill="none">
+      <header className="z-20 flex min-h-18 shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-6 max-[860px]:h-auto max-[860px]:flex-wrap max-[860px]:px-3 max-[860px]:py-2">
+        <Button
+          id="btn-back"
+          data-testid="btn-back"
+          label="nuki"
+          variant="ghost"
+          aria-label="返回首页"
+          icon={
+            <svg viewBox="0 0 28 28" width="20" height="20" fill="none" aria-hidden="true">
               <path d="M16.5 7.5 9 14l7.5 6.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M10 14h9.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
-          </span>
-          <span className="wordmark">nuki</span>
-        </button>
-        <nav className="editor-tabs" id="editor-tabs" role="tablist" aria-label="编辑工具">
-          <button
-            type="button"
-            role="tab"
-            data-tab="cutout"
-            className={tab === 'cutout' ? 'active' : undefined}
-            aria-selected={tab === 'cutout'}
-            onClick={() => getRuntime().setTab('cutout')}
+          }
+          onClick={() => getRuntime().leaveToHome()}
+        />
+        <div className="flex min-w-0 items-center justify-center gap-2 max-[860px]:order-3 max-[860px]:w-full max-[860px]:justify-start max-[860px]:overflow-x-auto">
+          <TabList
+            id="editor-tabs"
+            role="tablist"
+            aria-label="编辑工具"
+            value={tab}
+            onChange={(value) => {
+              if (value === 'cutout' || value === 'background' || value === 'adjust') getRuntime().setTab(value as EditorTab);
+            }}
           >
-            抠图
-          </button>
-          <button
-            type="button"
-            role="tab"
-            data-tab="background"
-            className={tab === 'background' ? 'active' : undefined}
-            aria-selected={tab === 'background'}
-            onClick={() => getRuntime().setTab('background')}
-          >
-            背景
-          </button>
-          <button
-            type="button"
-            role="tab"
-            data-tab="adjust"
-            className={tab === 'adjust' ? 'active' : undefined}
-            aria-selected={tab === 'adjust'}
-            onClick={() => getRuntime().setTab('adjust')}
-          >
-            调整
-          </button>
-          <button type="button" id="btn-advanced" data-testid="btn-advanced" aria-haspopup="dialog" onClick={() => getRuntime().openAdvanced()}>
-            高级
-          </button>
-        </nav>
-        <div className="top-actions">
-          <div className="header-download">
-            <button
+            <Tab value="cutout" label="抠图" data-tab="cutout" panelId="panel-cutout" />
+            <Tab value="background" label="背景" data-tab="background" panelId="panel-background" />
+            <Tab value="adjust" label="调整" data-tab="adjust" panelId="panel-adjust" />
+          </TabList>
+          <Button
+            id="btn-advanced"
+            data-testid="btn-advanced"
+            label="高级"
+            variant="ghost"
+            aria-haspopup="dialog"
+            onClick={() => getRuntime().openAdvanced()}
+          />
+        </div>
+        <div className="flex min-w-32 items-center justify-end gap-2">
+          <div className="flex items-center gap-2">
+            <Button
               id="btn-download"
-              className="primary pill"
-              disabled={downloadsDisabled}
               data-testid="btn-download"
+              label="下载"
+              variant="primary"
+              isDisabled={downloadsDisabled}
               onClick={() => getRuntime().downloadResult()}
-            >
-              下载
-            </button>
+            />
           </div>
         </div>
       </header>
       <Toolstrip />
       <AdvancedDialog />
-      <main className="workspace">
-        <section className="stage">
+      <main className="flex min-h-0 flex-1 flex-col">
+        <section className="relative flex min-h-0 flex-1 flex-col">
           <div
             className={dropClass}
             id="dropzone"
@@ -153,7 +165,7 @@ export function CutoutPage() {
             }}
           >
             <div
-              className="compare"
+              className={`${compareHidden ? 'hidden' : 'flex'} absolute inset-0 z-[1] items-center justify-center${dropzoneBrushOn ? ' touch-none' : ''}`}
               id="compare"
               data-testid="compare"
               hidden={compareHidden}
@@ -168,7 +180,7 @@ export function CutoutPage() {
               onPointerLeave={() => getRuntime().hideCursorIfIdle()}
             >
               <div
-                className="frame"
+                className="relative rounded-sm shadow-md"
                 id="frame"
                 ref={(el) => {
                   host.frame = el;
@@ -180,11 +192,18 @@ export function CutoutPage() {
                   transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`,
                 }}
               >
-                <div className="checker" id="checker" style={{ display: checkerOn ? 'block' : 'none' }} />
-                <img id="img-original" alt="原图" src={imgSrc} ref={(el) => { host.img = el; }} style={{ clipPath: imgClip }} />
-                <canvas id="canvas-result" data-testid="canvas-result" ref={(el) => { host.canvas = el; }} style={{ clipPath: canvasClip }} />
                 <div
-                  className="handle"
+                  className={
+                    checkerOn
+                      ? `absolute inset-0 z-0 block overflow-hidden rounded-sm bg-surface ${checkerTiles} bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0]`
+                      : 'hidden'
+                  }
+                  id="checker"
+                />
+                <img className="z-[1] block h-full w-full rounded-sm object-contain select-none [-webkit-user-drag:none]" id="img-original" alt="原图" src={imgSrc} ref={(el) => { host.img = el; }} style={{ clipPath: imgClip }} />
+                <canvas className="absolute inset-0 z-[2] h-full w-full rounded-sm" id="canvas-result" data-testid="canvas-result" ref={(el) => { host.canvas = el; }} style={{ clipPath: canvasClip }} />
+                <div
+                  className="absolute top-0 bottom-0 z-[3] w-0.5 -translate-x-px cursor-ew-resize touch-none bg-accent-bg"
                   id="handle"
                   hidden={handleHidden}
                   ref={(el) => {
@@ -195,19 +214,27 @@ export function CutoutPage() {
                   onPointerMove={(e) => getRuntime().onHandlePointerMove(e.nativeEvent)}
                   onPointerUp={(e) => getRuntime().onHandlePointerUp(e.nativeEvent)}
                 >
-                  <span />
+                  <span className={handleKnob} />
                 </div>
               </div>
             </div>
-            <div className="busy" id="busy" hidden={busyHidden} role="status" aria-live="polite" data-testid="cutout-busy">
-              <div className="busy-card">
-                <span className="spinner" />
-                <span id="busy-text">{busyText}</span>
-              </div>
+            <div
+              className={
+                busyHidden
+                  ? 'hidden'
+                  : 'absolute inset-0 z-[6] flex items-center justify-center bg-body/62 backdrop-blur-[6px]'
+              }
+              id="busy"
+              hidden={busyHidden}
+              data-testid="cutout-busy"
+            >
+              <Card>
+                <Spinner id="busy-text" size="xl" label={busyText} />
+              </Card>
             </div>
             <div
               id="brush-cursor"
-              className={`brush-cursor source-sam${brushCursor.erase ? ' kind-erase' : ''}${brushCursor.restore ? ' kind-restore' : ''}`}
+              className={`pointer-events-none fixed z-[8] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] ${brushRing} after:absolute after:inset-[18%] after:rounded-full after:border after:border-dashed after:border-white/90 after:content-['']`}
               hidden={brushCursor.hidden}
               style={{
                 width: `${brushCursor.width}px`,
@@ -217,24 +244,21 @@ export function CutoutPage() {
               }}
             />
           </div>
-          <div className="stage-footer">
-            <div className="zoom-dock">
-              <button type="button" id="btn-zoom-out" title="缩小" onClick={() => getRuntime().zoomOut()}>
-                −
-              </button>
-              <button type="button" id="btn-zoom-reset" title="100%" onClick={() => getRuntime().zoomReset()}>
-                {`${Math.round(view.zoom * 100)}%`}
-              </button>
-              <button type="button" id="btn-zoom-in" title="放大" onClick={() => getRuntime().zoomIn()}>
-                +
-              </button>
+          <div className="flex items-center justify-between gap-4 bg-body px-5 pt-2 pb-3 max-[860px]:flex-wrap">
+            <div className="flex items-center">
+              <Button id="btn-zoom-out" label="−" aria-label="缩小" variant="ghost" size="sm" onClick={() => getRuntime().zoomOut()} />
+              <Button
+                id="btn-zoom-reset"
+                label={`${Math.round(view.zoom * 100)}%`}
+                aria-label="100%"
+                variant="ghost"
+                size="sm"
+                onClick={() => getRuntime().zoomReset()}
+              />
+              <Button id="btn-zoom-in" label="+" aria-label="放大" variant="ghost" size="sm" onClick={() => getRuntime().zoomIn()} />
             </div>
-            <p className="hint center" id="stage-hint">
-              {stageHint}
-            </p>
-            <p className="hint timings" id="timings">
-              {timings}
-            </p>
+            <Text id="stage-hint" color="secondary">{stageHint}</Text>
+            <Text id="timings" className="max-w-[46%] text-right whitespace-pre-line max-[860px]:max-w-full max-[860px]:text-left" type="supporting" color="secondary">{timings}</Text>
           </div>
         </section>
       </main>

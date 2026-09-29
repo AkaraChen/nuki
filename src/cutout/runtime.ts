@@ -31,7 +31,7 @@ export function defaultUi(): CutoutUi {
     tab: 'cutout',
     tool: 'compare',
     bgMode: 'transparent',
-    color: '#0F70E6',
+    color: '#0F70E6', // background fill swatch, not product chrome
     threshold: 0.5,
     gamma: 1,
     invert: false,

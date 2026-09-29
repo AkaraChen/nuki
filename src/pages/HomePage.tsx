@@ -1,6 +1,10 @@
+import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { useLayoutEffect } from 'react';
-import { host } from '../cutout/host';
 import { Brand } from '../components/Brand';
+import { host } from '../cutout/host';
 import { getRuntime, useCutoutStore } from '../store/cutout-store';
 
 export function HomePage() {
@@ -13,13 +17,13 @@ export function HomePage() {
 
   return (
     <>
-      <header className="topbar">
+      <header className="z-20 flex min-h-18 shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-6 max-[860px]:h-auto max-[860px]:flex-wrap max-[860px]:px-3 max-[860px]:py-2">
         <Brand />
       </header>
-      <main className="workspace">
-        <section className="stage">
+      <main className="flex min-h-0 flex-1 flex-col items-center justify-center">
+        <section className="relative flex w-[min(448px,calc(100vw-48px))] flex-none flex-col max-[860px]:w-[min(100%-24px,420px)]">
           <div
-            className={dropzoneDragover ? 'dropzone dragover' : 'dropzone'}
+            className={`relative flex min-h-80 cursor-pointer items-center justify-center overflow-hidden px-6 py-8${dropzoneDragover ? ' outline outline-[3px] outline-offset-2 outline-accent-bg' : ''}`}
             id="dropzone"
             data-testid="dropzone"
             ref={(el) => {
@@ -54,23 +58,24 @@ export function HomePage() {
               }}
               onChange={() => getRuntime().onFileInputChange()}
             />
-            <div className="empty" id="empty">
-              <div className="upload-card">
-                <button
-                  type="button"
-                  className="btn-upload"
+            <Card className="w-full">
+              <Stack gap={3} align="center">
+                <Button
                   id="btn-upload"
+                  data-testid="btn-upload"
+                  label="上传图片"
+                  variant="primary"
+                  size="lg"
+                  width={280}
                   onClick={(e) => {
                     e.stopPropagation();
                     getRuntime().openFilePicker();
                   }}
-                >
-                  上传图片
-                </button>
-                <p className="upload-or">或拖入文件，粘贴图片</p>
-                <p className="upload-types">PNG / JPEG / WebP</p>
-              </div>
-            </div>
+                />
+                <Text>或拖入文件，粘贴图片</Text>
+                <Text type="supporting" color="secondary">PNG / JPEG / WebP</Text>
+              </Stack>
+            </Card>
           </div>
         </section>
       </main>

@@ -66,7 +66,7 @@ export function App() {
 
   return (
     <>
-      <div className="app" inert={bootOpen ? true : undefined}>
+      <div className="flex h-dvh min-h-0 flex-col bg-body font-sans text-primary" inert={bootOpen ? true : undefined}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/cutout" element={<CutoutPage />} />
