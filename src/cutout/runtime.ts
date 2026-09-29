@@ -84,7 +84,7 @@ export function defaultUi(): CutoutUi {
 
 export const MODEL_OPTIONS = MODELS.map((m) => ({
   id: m.id,
-  label: `${m.label} · 约 ${m.sizeMB} MB`,
+  label: m.label,
 }));
 
 export const DTYPE_OPTIONS = [

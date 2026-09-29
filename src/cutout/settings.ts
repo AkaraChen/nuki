@@ -50,5 +50,5 @@ export function readSettings(): CutoutSettings {
 
 export function settingsNote(modelId: string) {
   const spec = modelById(modelId);
-  return `${spec.note} 授权：${spec.license}`;
+  return spec.note;
 }
