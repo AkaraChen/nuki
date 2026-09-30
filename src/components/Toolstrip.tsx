@@ -18,6 +18,8 @@ export function Toolstrip() {
   const brushTitle = useCutoutStore((s) => s.brushTitle);
   const bgMode = useCutoutStore((s) => s.bgMode);
   const color = useCutoutStore((s) => s.color);
+  const customColor = useCutoutStore((s) => s.customColor);
+  const colorSource = useCutoutStore((s) => s.colorSource);
   const threshold = useCutoutStore((s) => s.threshold);
   const gamma = useCutoutStore((s) => s.gamma);
   const invert = useCutoutStore((s) => s.invert);
@@ -111,17 +113,35 @@ export function Toolstrip() {
           </SegmentedControl>
         </div>
         <div className="flex items-center gap-2" id="bg-swatches">
-          <Swatch color="#ffffff" forceMode="transparent" title="透明" checker bgMode={bgMode} current={color} />
-          <Swatch color="#ffffff" title="白" style={{ background: '#fff' }} bgMode={bgMode} current={color} />
-          <Swatch color="#000000" title="黑" style={{ background: '#111' }} bgMode={bgMode} current={color} />
-          <Swatch color="#0F70E6" title="蓝" style={{ background: '#0F70E6' }} bgMode={bgMode} current={color} /> {/* background fill swatch, not product chrome */}
-          <Swatch color="#ffc83e" title="黄" style={{ background: '#ffc83e' }} bgMode={bgMode} current={color} />
-          <Swatch color="#e9ebec" title="浅灰" style={{ background: '#e9ebec' }} bgMode={bgMode} current={color} />
-          <Swatch color="#db1436" title="红" style={{ background: '#db1436' }} bgMode={bgMode} current={color} />
+          <Swatch color="#ffffff" forceMode="transparent" title="透明" checker bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
+          <Swatch color="#ffffff" title="白" style={{ background: '#fff' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
+          <Swatch color="#000000" title="黑" style={{ background: '#111' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
+          <Swatch color="#0F70E6" title="蓝" style={{ background: '#0F70E6' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} /> {/* background fill swatch, not product chrome */}
+          <Swatch color="#ffc83e" title="黄" style={{ background: '#ffc83e' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
+          <Swatch color="#e9ebec" title="浅灰" style={{ background: '#e9ebec' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
+          <Swatch color="#db1436" title="红" style={{ background: '#db1436' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
         </div>
-        <label className={bgMode === 'color' ? 'flex items-center gap-2' : 'hidden'} id="color-field" hidden={bgMode !== 'color'}>
+        <label className="flex items-center gap-2" id="color-field" title="自定义颜色">
           <Text type="supporting" color="secondary">自定义</Text>
-          <input id="inp-color" className="h-9 w-16 cursor-pointer rounded-md border border-border bg-surface p-1" type="color" aria-label="自定义" value={color} onChange={(e) => getRuntime().setColor(e.target.value)} />
+          <span
+            className={[
+              'relative block size-7 rounded-full border-2 border-surface',
+              bgMode === 'color' && colorSource === 'custom' ? 'ring-2 ring-accent-bg' : 'ring-1 ring-border',
+            ].join(' ')}
+            style={{ background: customColor }}
+            data-active={bgMode === 'color' && colorSource === 'custom'}
+            id="custom-swatch"
+          >
+            <input
+              id="inp-color"
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
+              type="color"
+              aria-label="自定义"
+              value={customColor}
+              onClick={() => getRuntime().activateCustomColor()}
+              onChange={(e) => getRuntime().pickCustomColor(e.target.value)}
+            />
+          </span>
         </label>
       </section>
 
