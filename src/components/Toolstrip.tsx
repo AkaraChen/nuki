@@ -121,7 +121,7 @@ export function Toolstrip() {
           <Swatch color="#e9ebec" title="浅灰" style={{ background: '#e9ebec' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
           <Swatch color="#db1436" title="红" style={{ background: '#db1436' }} bgMode={bgMode} current={colorSource === 'preset' ? color : ''} />
         </div>
-        <label className="flex items-center gap-2" id="color-field" title="自定义颜色">
+        <label className={bgMode === 'color' ? 'flex items-center gap-2' : 'hidden'} id="color-field" title="自定义颜色" hidden={bgMode !== 'color'}>
           <Text type="supporting" color="secondary">自定义</Text>
           <span
             className={[
