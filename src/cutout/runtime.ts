@@ -32,6 +32,8 @@ export function defaultUi(): CutoutUi {
     tool: 'compare',
     bgMode: 'transparent',
     color: '#0F70E6', // background fill swatch, not product chrome
+    customColor: '#8b5cf6', // background fill swatch, not product chrome
+    colorSource: 'preset',
     threshold: 0.5,
     gamma: 1,
     invert: false,
@@ -531,9 +533,14 @@ export class CutoutRuntime {
     this.scheduleRender();
   }
 
-  setColor(color: string) {
-    this.set({ color });
+  pickCustomColor(color: string) {
+    this.set({ color, customColor: color, colorSource: 'custom', bgMode: 'color' });
     this.scheduleRender();
+  }
+
+  activateCustomColor() {
+    if (this.ui.bgMode === 'color' && this.ui.colorSource === 'custom') return;
+    this.pickCustomColor(this.ui.customColor);
   }
 
   pickSwatch(color: string, forceMode?: string) {
@@ -541,7 +548,7 @@ export class CutoutRuntime {
       this.setBgMode('transparent');
       return;
     }
-    this.set({ color, bgMode: 'color' });
+    this.set({ color, colorSource: 'preset', bgMode: 'color' });
     this.scheduleRender();
   }
 

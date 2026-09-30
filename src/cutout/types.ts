@@ -29,6 +29,8 @@ export type CutoutUi = {
   tool: Tool;
   bgMode: BgMode;
   color: string;
+  customColor: string;
+  colorSource: 'preset' | 'custom';
   threshold: number;
   gamma: number;
   invert: boolean;
