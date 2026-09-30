@@ -36,11 +36,15 @@ const activeSwatches = (page: Page) =>
       .map((e) => (e.id === 'custom-swatch' ? 'custom' : (e.getAttribute('data-color') ?? ''))),
   );
 
-test('custom background colour is always reachable and applies immediately', async ({ page }) => {
+test('custom colour picker shows only in solid mode and applies immediately', async ({ page }) => {
   await openWithTransparentSource(page);
 
-  await expect(page.locator('#inp-color')).toBeVisible();
+  await expect(page.locator('#inp-color')).toBeHidden();
   expect(await cornerPixel(page)).toEqual([0, 0, 0, 0]);
+
+  await page.locator('[data-mode="color"]').click();
+  await expect(page.locator('#inp-color')).toBeVisible();
+  expect(await activeSwatches(page)).toEqual(['#0F70E6']);
 
   await page.locator('#inp-color').click();
   await expect.poll(() => cornerPixel(page)).toEqual([139, 92, 246, 255]);
@@ -59,7 +63,7 @@ test('custom background colour is always reachable and applies immediately', asy
   expect(await activeSwatches(page)).toEqual(['custom']);
 
   await page.locator('[data-mode="dim"]').click();
-  await expect(page.locator('#inp-color')).toBeVisible();
+  await expect(page.locator('#inp-color')).toBeHidden();
   expect(await activeSwatches(page)).toEqual([]);
 
   await page.locator('[data-mode="color"]').click();
@@ -67,6 +71,7 @@ test('custom background colour is always reachable and applies immediately', asy
   expect(await activeSwatches(page)).toEqual(['custom']);
 
   await page.locator('[data-force-mode="transparent"]').click();
+  await expect(page.locator('#inp-color')).toBeHidden();
   await expect.poll(() => cornerPixel(page)).toEqual([0, 0, 0, 0]);
   expect(await activeSwatches(page)).toEqual(['#ffffff']);
 });
